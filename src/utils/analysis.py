@@ -125,17 +125,22 @@ def get_successful_directors(df):
     """
     # Explode directors column as a movie can have multiple directors
     # Assuming directors are pipe-separated strings
-    directors = df["directors"].str.split("|").explode()
-    movies_with_directors = df.loc[directors.index]
+    directors_df = df[["id", "directors", "revenue_musd", "vote_average"]].copy()
+    directors_df["director"] = directors_df["directors"].str.split("|")
+    directors_df = directors_df.explode("director")
 
     # Group by director name
-    performance = movies_with_directors.groupby(directors).agg(
-        {
-            "id": "count",
-            "revenue_musd": "sum",
-            "vote_average": "mean",
-        }
-    ).round(2)
+    performance = (
+        directors_df.groupby("director")
+        .agg(
+            {
+                "id": "count",
+                "revenue_musd": "sum",
+                "vote_average": "mean",
+            }
+        )
+        .round(2)
+    )
 
     performance.columns = [
         "Total Movies",

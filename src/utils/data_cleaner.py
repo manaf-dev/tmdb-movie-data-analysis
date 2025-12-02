@@ -43,7 +43,7 @@ def clean_movie_data(df):
         lambda x: "|".join([g["name"] for g in x]) if isinstance(x, list) else ""
     )
 
-    # Extract other list fields
+    # Extract spoken languages and production details
     movies_df["spoken_languages"] = movies_df["spoken_languages"].apply(
         lambda x: (
             "|".join([lang["english_name"] for lang in x])

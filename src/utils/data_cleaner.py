@@ -145,13 +145,6 @@ def clean_movie_data(df):
     movies_df = movies_df[available_cols]
     movies_df.reset_index(drop=True, inplace=True)
 
-    # Save cleaned data
-    try:
-        movies_df.to_csv("notebooks/cleaned_movies_data.csv", index=False)
-        logger.info("Saved cleaned data to notebooks/cleaned_movies_data.csv")
-    except Exception as e:
-        logger.warning(f"Could not save cleaned data: {e}")
-
     logger.info(
         f"Cleaned data: {len(movies_df)} movies, {len(movies_df.columns)} columns"
     )

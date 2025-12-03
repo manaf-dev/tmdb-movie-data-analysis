@@ -63,7 +63,7 @@ def plot_roi_by_genre(df):
     genre_roi = genre_df.groupby("Genre")["roi"].mean().sort_values(ascending=False)
 
     # Create bar chart
-    plt.bar(genre_roi.index, genre_roi.values, color="steelblue", edgecolor="black")
+    plt.bar(genre_roi.index, genre_roi.values, edgecolor="black")
 
     plt.xlabel("Genre", fontsize=12)
     plt.ylabel("Average ROI", fontsize=12)
@@ -97,7 +97,7 @@ def plot_franchise_comparison(df):
     }
 
     # Create subplots
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    fig, axs = plt.subplots(2, 2, figsize=(12, 10))
     fig.suptitle(
         "Franchise vs Standalone Movie Performance", fontsize=14, fontweight="bold"
     )
@@ -106,29 +106,29 @@ def plot_franchise_comparison(df):
     colors = ["#2E86AB", "#A23B72"]
 
     # Revenue comparison
-    axes[0, 0].bar(categories, metrics["Revenue"], color=colors, edgecolor="black")
-    axes[0, 0].set_title("Average Revenue (M USD)")
-    axes[0, 0].set_ylabel("Million USD")
-    axes[0, 0].grid(True, axis="y", alpha=0.3)
+    axs[0, 0].bar(categories, metrics["Revenue"], color=colors, edgecolor="black")
+    axs[0, 0].set_title("Average Revenue (M USD)")
+    axs[0, 0].set_ylabel("Million USD")
+    axs[0, 0].grid(True, axis="y", alpha=0.3)
 
     # ROI comparison
-    axes[0, 1].bar(categories, metrics["ROI"], color=colors, edgecolor="black")
-    axes[0, 1].set_title("Average ROI")
-    axes[0, 1].set_ylabel("ROI Multiplier")
-    axes[0, 1].grid(True, axis="y", alpha=0.3)
+    axs[0, 1].bar(categories, metrics["ROI"], color=colors, edgecolor="black")
+    axs[0, 1].set_title("Average ROI")
+    axs[0, 1].set_ylabel("ROI Multiplier")
+    axs[0, 1].grid(True, axis="y", alpha=0.3)
 
     # Budget comparison
-    axes[1, 0].bar(categories, metrics["Budget"], color=colors, edgecolor="black")
-    axes[1, 0].set_title("Average Budget (M USD)")
-    axes[1, 0].set_ylabel("Million USD")
-    axes[1, 0].grid(True, axis="y", alpha=0.3)
+    axs[1, 0].bar(categories, metrics["Budget"], color=colors, edgecolor="black")
+    axs[1, 0].set_title("Average Budget (M USD)")
+    axs[1, 0].set_ylabel("Million USD")
+    axs[1, 0].grid(True, axis="y", alpha=0.3)
 
     # Rating comparison
-    axes[1, 1].bar(categories, metrics["Rating"], color=colors, edgecolor="black")
-    axes[1, 1].set_title("Average Rating")
-    axes[1, 1].set_ylabel("Rating (out of 10)")
-    axes[1, 1].set_ylim(0, 10)
-    axes[1, 1].grid(True, axis="y", alpha=0.3)
+    axs[1, 1].bar(categories, metrics["Rating"], color=colors, edgecolor="black")
+    axs[1, 1].set_title("Average Rating")
+    axs[1, 1].set_ylabel("Rating (out of 10)")
+    axs[1, 1].set_ylim(0, 10)
+    axs[1, 1].grid(True, axis="y", alpha=0.3)
 
     plt.tight_layout()
     plt.show()
@@ -143,7 +143,7 @@ def plot_popularity_vs_rating(df):
     """
     plt.figure(figsize=(10, 6))
     plt.scatter(
-        df["vote_average"], df["popularity"], alpha=0.6, edgecolors="w", linewidth=0.5
+        df["vote_average"], df["popularity"], alpha=0.6, s=50, edgecolors="black", linewidth=0.5
     )
 
     plt.xlabel("Rating", fontsize=12)
@@ -173,7 +173,7 @@ def plot_yearly_trends(df):
     yearly_stats.columns = ["Movie Count", "Mean Revenue", "Mean Budget", "Mean ROI"]
 
     # Create subplots
-    fig, axs = plt.subplots(2, 2, figsize=(16, 10))
+    fig, axs = plt.subplots(2, 2, figsize=(12, 10))
     fig.suptitle("Yearly Box Office Performance Trends", fontsize=16, fontweight="bold")
 
     # Movie Count per Year

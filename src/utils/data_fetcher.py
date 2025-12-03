@@ -1,18 +1,12 @@
-"""
-Data fetching utilities for TMDB API.
-"""
-
 import logging
 import os
 
+from dotenv import load_dotenv
 import pandas as pd
 import requests
-from dotenv import load_dotenv
 
-# Load environment
 load_dotenv()
 
-# Setup logging
 logger = logging.getLogger(__name__)
 
 

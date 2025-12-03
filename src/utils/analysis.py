@@ -124,7 +124,7 @@ def get_successful_directors(df):
         DataFrame with director statistics
     """
     # Explode directors column as a movie can have multiple directors
-    # Assuming directors are pipe-separated strings
+    # directors are pipe-separated strings
     directors_df = df[["id", "directors", "revenue_musd", "vote_average"]].copy()
     directors_df["director"] = directors_df["directors"].str.split("|")
     directors_df = directors_df.explode("director")

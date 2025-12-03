@@ -1,12 +1,25 @@
-"""
-Data cleaning and preprocessing utilities.
-"""
-
 import logging
 
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+
+def join_names(names, key):
+    """Helper function to join names from a list of dicts."""
+    return "|".join([name[key] for name in names]) if isinstance(names, list) else ""
+
+def extract_cast(credits):
+    """Helper function to extract cast names from credits dictionary."""
+    return "|".join([m["name"] for m in credits.get("cast", [])]) if isinstance(credits, dict) else ""
+
+def extract_directors(credits):
+    """Helper function to extract director names from credits dictionary."""
+    return "|".join([m["name"] for m in credits.get("crew", []) if m.get("job") == "Director"]) if isinstance(credits, dict) else ""
+
+def count_items(credits, key):
+    """Helper function to count items in a list within credits dictionary."""
+    return len(credits.get(key, [])) if isinstance(credits, dict) else 0        
 
 
 def clean_movie_data(df):
@@ -22,7 +35,7 @@ def clean_movie_data(df):
     logger.info("Starting data cleaning...")
     movies_df = df.copy()
 
-    # Drop irrelevant columns
+    # STEP 1: Drop irrelevant columns
     columns_to_drop = [
         "adult",
         "imdb_id",
@@ -33,6 +46,7 @@ def clean_movie_data(df):
     ]
     movies_df.drop(columns=columns_to_drop, inplace=True, errors="ignore")
 
+    # STEP 2: Extract nested data
     # Extract collection name
     movies_df["belongs_to_collection"] = movies_df["belongs_to_collection"].apply(
         lambda x: x["name"] if isinstance(x, dict) and "name" in x else None
@@ -40,81 +54,88 @@ def clean_movie_data(df):
 
     # Extract genres
     movies_df["genres"] = movies_df["genres"].apply(
-        lambda x: "|".join([g["name"] for g in x]) if isinstance(x, list) else ""
+        lambda x: join_names(x, "name")
     )
 
-    # Extract spoken languages and production details
+    # Extract spoken languages
     movies_df["spoken_languages"] = movies_df["spoken_languages"].apply(
-        lambda x: (
-            "|".join([lang["english_name"] for lang in x])
-            if isinstance(x, list)
-            else ""
-        )
+        lambda x: join_names(x, "english_name")
     )
+
+    # Extract production countrie
     movies_df["production_countries"] = movies_df["production_countries"].apply(
-        lambda x: "|".join([c["name"] for c in x]) if isinstance(x, list) else ""
+        lambda x: join_names(x, "name")
     )
+
+    # Extract production companies
     movies_df["production_companies"] = movies_df["production_companies"].apply(
-        lambda x: "|".join([c["name"] for c in x]) if isinstance(x, list) else ""
+        lambda x: join_names(x, "name")
     )
 
     # Extract cast and crew
     movies_df["cast"] = movies_df["credits"].apply(
-        lambda x: (
-            "|".join([m["name"] for m in x["cast"]]) if isinstance(x, dict) else ""
-        )
+        lambda x: extract_cast(x)
     )
     movies_df["cast_size"] = movies_df["credits"].apply(
-        lambda x: len(x["cast"]) if isinstance(x, dict) else 0
+        lambda x: count_items(x, "cast")
     )
     movies_df["directors"] = movies_df["credits"].apply(
-        lambda x: (
-            "|".join([m["name"] for m in x["crew"] if m["job"] == "Director"])
-            if isinstance(x, dict)
-            else ""
-        )
+        lambda x: extract_directors(x)
     )
     movies_df["crew_size"] = movies_df["credits"].apply(
-        lambda x: len(x["crew"]) if isinstance(x, dict) else 0
+        lambda x: count_items(x, "crew")
     )
+
+    # Remove credits column after extractions
     movies_df.drop(columns=["credits"], inplace=True, errors="ignore")
 
-    # Convert data types
-    movies_df["budget"] = pd.to_numeric(movies_df["budget"], errors="coerce")
-    movies_df["revenue"] = pd.to_numeric(movies_df["revenue"], errors="coerce")
-    movies_df["runtime"] = pd.to_numeric(movies_df["runtime"], errors="coerce")
+    # STEP 3: Inspect extracted columns using value_counts() to identify anomalies.
+    for col in ["belongs_to_collection", "genres", "spoken_languages", "production_countries", "production_companies", "cast", "directors"]:
+        if col in movies_df.columns:
+            logger.info(f"Value counts for {col}:\n{movies_df[col].value_counts(dropna=False).head(10)}\n")
+
+    # STEP 4: Convert data types
+    # Convert budget, revenue, runtime to numeric 
+    for col in ["budget", "revenue", "runtime"]:
+        movies_df[col] = pd.to_numeric(movies_df[col], errors="coerce")
+
+    # Convert release_date to datetime
     movies_df["release_date"] = pd.to_datetime(
         movies_df["release_date"], errors="coerce"
     )
 
-    # Handle unrealistic values
-    movies_df.loc[movies_df["budget"] <= 0, "budget"] = pd.NA
-    movies_df.loc[movies_df["revenue"] <= 0, "revenue"] = pd.NA
-    movies_df.loc[movies_df["runtime"] <= 0, "runtime"] = pd.NA
+    # STEP 5: Replace unrealistic values
+    # Set budget, revenue, runtime <= 0 to NaN
+    for col in ["budget", "revenue", "runtime"]:
+        movies_df.loc[movies_df[col] <= 0, col] = pd.NA
 
-    # Convert to millions USD
-    movies_df["budget_musd"] = movies_df["budget"] / 1_000_000
-    movies_df["revenue_musd"] = movies_df["revenue"] / 1_000_000
+    # Convert budget and revenue to millions USD
+    for col in ["budget", "revenue"]:
+        movies_df[f"{col}_musd"] = movies_df[col] / 1_000_000
+    
+    # Drop original budget and revenue columns
     movies_df.drop(columns=["budget", "revenue"], inplace=True)
 
-    # Clean ratings
+    # Set vote_average to NaN where vote_count is 0
     movies_df.loc[movies_df["vote_count"] == 0, "vote_average"] = pd.NA
 
-    # Remove duplicates and invalid rows
+    # STEP 6: Remove duplicates and invalid rows
     movies_df.drop_duplicates(subset=["id"], keep="first", inplace=True)
     movies_df.dropna(subset=["id", "title"], inplace=True)
+
+    # Keep rows with at least 10 non-NA values
     movies_df = movies_df[movies_df.notna().sum(axis=1) >= 10]
 
-    # Filter released movies only
+    # STEP 7: Filter released movies only and drop status column
     if "status" in movies_df.columns:
         movies_df = movies_df[movies_df["status"] == "Released"]
         movies_df.drop(columns=["status"], inplace=True)
 
-    # Add calculated metrics
+    # STEP 8: Add calculated metrics for profit and roi
     movies_df["profit"] = movies_df["revenue_musd"] - movies_df["budget_musd"]
     movies_df["roi"] = movies_df["revenue_musd"] / movies_df["budget_musd"]
 
-    # Reorder columns
+    # STEP 9: Reorder columns
     column_order = [
         "id",
         "title",
@@ -142,8 +163,7 @@ def clean_movie_data(df):
         "crew_size",
     ]
     available_cols = [c for c in column_order if c in movies_df.columns]
-    movies_df = movies_df[available_cols]
-    movies_df.reset_index(drop=True, inplace=True)
+    movies_df = movies_df[available_cols].reset_index(drop=True, inplace=True)
 
     logger.info(
         f"Cleaned data: {len(movies_df)} movies, {len(movies_df.columns)} columns"

@@ -22,7 +22,7 @@ def rank_movies(df, metric, top_n=5, ascending=False, min_budget=None, min_votes
     """
     data = df.copy()
 
-    # Apply filters
+    # Filter based on budget and votes
     if min_budget:
         data = data[data["budget_musd"] >= min_budget]
     if min_votes:

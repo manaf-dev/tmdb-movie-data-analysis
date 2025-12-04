@@ -42,11 +42,11 @@ def analyze_franchise_vs_standalone(df):
     Returns:
         Comparison DataFrame with key metrics
     """
-    # Separate movies by franchise membership
+    # get franchise and standalone movies
     franchise = df[df["belongs_to_collection"].notna()]
     standalone = df[df["belongs_to_collection"].isna()]
 
-    # Calculate comparison metrics
+    # calculate comparison metrics
     comparison = pd.DataFrame(
         {
             "Metric": [
@@ -129,7 +129,7 @@ def get_successful_directors(df):
     directors_df["director"] = directors_df["directors"].str.split("|")
     directors_df = directors_df.explode("director")
 
-    # Group by director name
+    # group by director name
     performance = (
         directors_df.groupby("director")
         .agg(

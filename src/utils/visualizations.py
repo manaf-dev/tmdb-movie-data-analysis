@@ -28,22 +28,9 @@ def plot_revenue_vs_budget(df):
         linewidth=0.5,
     )
 
-    # Add trend line
-    z = np.polyfit(plot_data["budget_musd"], plot_data["revenue_musd"], 1)
-    p = np.poly1d(z)
-    plt.plot(
-        plot_data["budget_musd"],
-        p(plot_data["budget_musd"]),
-        "r--",
-        alpha=0.8,
-        linewidth=2,
-        label=f"Trend: y={z[0]:.2f}x+{z[1]:.2f}",
-    )
-
     plt.xlabel("Budget (Million USD)", fontsize=12)
     plt.ylabel("Revenue (Million USD)", fontsize=12)
     plt.title("Revenue vs Budget Trends", fontsize=14, fontweight="bold")
-    plt.legend(fontsize=10)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.show()
@@ -58,7 +45,7 @@ def plot_roi_by_genre(df):
     """
     plt.figure(figsize=(10, 6))
 
-    # Explode genres and calculate average ROI
+    # Explode genres and calculate mean roi
     genre_df = df.assign(Genre=df["genres"].str.split("|")).explode("Genre")
     genre_roi = genre_df.groupby("Genre")["roi"].mean().sort_values(ascending=False)
 
@@ -81,11 +68,11 @@ def plot_franchise_comparison(df):
     Args:
         df: Movie DataFrame with franchise indicators
     """
-    # Separate franchise and standalone movies
+    # get franchise and standalone movies
     franchise = df[df["belongs_to_collection"].notna()]
     standalone = df[df["belongs_to_collection"].isna()]
 
-    # Calculate metrics
+    # calculate metrics
     metrics = {
         "Revenue": [
             franchise["revenue_musd"].mean(),
@@ -143,7 +130,7 @@ def plot_popularity_vs_rating(df):
     """
     plt.figure(figsize=(10, 6))
     plt.scatter(
-        df["vote_average"], df["popularity"], alpha=0.6, s=50, edgecolors="black", linewidth=0.5
+        df["vote_average"], df["popularity"], alpha=0.6, s=100, edgecolors="black", linewidth=0.5
     )
 
     plt.xlabel("Rating", fontsize=12)

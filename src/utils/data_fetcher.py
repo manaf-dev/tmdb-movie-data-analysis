@@ -1,16 +1,17 @@
 import logging
 import os
+import time
 
-from dotenv import load_dotenv
 import pandas as pd
 import requests
+from dotenv import load_dotenv
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 
-def fetch_movies_from_api(movie_ids):
+def fetch_movies_from_api(movie_ids, max_retries=3, backoff_factor=1.5):
     """
     Fetch movies from TMDB API.
 
@@ -29,16 +30,39 @@ def fetch_movies_from_api(movie_ids):
 
     for movie_id in movie_ids:
         url = f"{base_url}{movie_id}?append_to_response=credits"
-        try:
-            response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                movies.append(response.json())
-            else:
-                logger.error(
-                    f"Failed to fetch movie ID {movie_id}: {response.status_code}"
+        attempts = 0
+
+        while attempts <= max_retries:
+            try:
+                response = requests.get(url, headers=headers)
+                if response.status_code == 200:
+                    movies.append(response.json())
+                    break
+
+                if response.status_code in (429, 500, 502, 503, 504):
+                    wait_time = backoff_factor**attempts
+                    logger.warning(
+                        f"Retry {attempts + 1}/{max_retries} for movie with ID {movie_id}. "
+                        f"Waiting {wait_time:.1f} seconds..."
+                    )
+                    time.sleep(wait_time)
+                    attempts += 1
+                else:
+                    logger.error(
+                        f"Failed to fetch movie with ID {movie_id}: (Status code {response.status_code})"
+                    )
+                    break
+
+            except requests.exceptions.RequestException as e:
+                wait_time = backoff_factor**attempts
+                logger.warning(
+                    f"Error fetching movie with ID {movie_id}: {e}. "
+                    f"Retrying in {wait_time:.1f}s... (Attempt {attempts + 1}/{max_retries})"
                 )
-        except Exception as e:
-            logger.error(f"Error fetching movie {movie_id}: {e}")
+                time.sleep(wait_time)
+                attempts += 1
+        else:
+            logger.error(f"Exceeded max retries for movie with ID {movie_id}")
 
     logger.info(f"Successfully fetched {len(movies)} movies")
 

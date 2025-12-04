@@ -1,14 +1,11 @@
-import logging
-import os
 import time
 
 import pandas as pd
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
+from src.config import TMDB_API_KEY, get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def fetch_movies_from_api(movie_ids, max_retries=3, backoff_factor=1.5):
@@ -22,8 +19,7 @@ def fetch_movies_from_api(movie_ids, max_retries=3, backoff_factor=1.5):
         pandas DataFrame with raw movie data
     """
     base_url = "https://api.themoviedb.org/3/movie/"
-    access_token = os.getenv("TMDB_API_KEY")
-    headers = {"accept": "application/json", "Authorization": f"Bearer {access_token}"}
+    headers = {"accept": "application/json", "Authorization": f"Bearer {TMDB_API_KEY}"}
 
     movies = []
     logger.info("Fetching movies from TMDB API")

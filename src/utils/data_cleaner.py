@@ -1,8 +1,8 @@
-import logging
-
 import pandas as pd
 
-logger = logging.getLogger(__name__)
+from src.config import get_logger
+
+logger = get_logger(__name__)
 
 
 def join_names(names, key):

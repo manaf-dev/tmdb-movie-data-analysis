@@ -1,7 +1,3 @@
-"""
-KPI analysis and ranking utilities.
-"""
-
 import pandas as pd
 
 

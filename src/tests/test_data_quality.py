@@ -1,6 +1,6 @@
 import pandas as pd
 
-from ..utils.data_quality import check_duplicates, check_outliers
+from src.utils.data_quality import check_duplicates, check_outliers
 
 
 def test_check_duplicates_with_duplicates():

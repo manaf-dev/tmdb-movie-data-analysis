@@ -5,8 +5,8 @@ logger = get_logger(__name__)
 
 def check_duplicates(df):
     if not df["id"].is_unique:
-        duplicates = df[df["id"].duplicated()]["id"]
-        logger.warning(f"Duplicate movie IDs found: {duplicates.tolist()}")
+        duplicates = df[df["id"].duplicated()]["id"].tolist()
+        logger.warning(f"Duplicate movie IDs found: {duplicates}")
 
         return duplicates
     logger.info("No duplicate movie IDs found")
